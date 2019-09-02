@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="jquery.slimscroll.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css">
+    <style>
+        #messageArea {
+            display: none;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <div id="userFormArea" class="row">
+            <div class="col-4">
+                <form action="" id="userForm">
+                    <div class="form-group">
+                        <label for="">Username</label>
+                        <input class="form-control" name="" id="username" cols="80" rows="1">
+                        <br />
+                        <input type="submit" class="btn btn-primary" id="submit" value="Login">
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="row" id="messageArea">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        Online Users
+                    </div>
+                    <div class="card-body">
+                        <ul class="list-group" id="users">
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 offset-md-2">
+                <div class="pr-4" id="chat">
+                </div>
+                <form action="" id="messageForm" class="form-inline" style="position:fixed;bottom:20px">
+                    <div class="form-group">
+                        <textarea class="form-control d-inline-block mr-2" name="" id="message" cols="80" rows="1"></textarea>
+                        <button type="submit" class="btn btn-primary float-right px-4 d-inline-block"><i class="far fa-paper-plane"></i></button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+<script>
+    $(function () {
+        
+        //initialize slim scroll
+        $('#chat').slimScroll({
+		height: '620px'
+        });
+
+        //
+        //submit form on enter key press
+        $('#message').keypress(function(e) {
+            if (e.which == 13) {
+                $('form#messageForm').submit();
+                return false;
+            }
+        });
+        const socket = io.connect();
+        const $messageFormArea = $('#messageFormArea');
+        const $messageForm = $('#messageForm');
+        const $message = $('#message');
+        const $chat = $('#chat');
+        const $userForm = $('#userForm');
+        const $userFormArea = $('#userFormArea');
+        const $users = $('#users');
+        const $username = $('#username');
+        const $messageArea = $('#messageArea');
+
+        $messageForm.submit(function (e) {
+            e.preventDefault();
+            if($message.val().trim() == ''){
+            alert('Please type a message!');
+            return ; 
+            }
+            socket.emit('send-message', $message.val());
+            $message.val('');
+        });
+
+        let bg_colors = ['#FF5CA1', '#7646FF', '#FF7E29', '#13CF13', '#0084FF', '#FA3C4C'];
+        var bg_color = bg_colors[Math.floor(Math.random()*bg_colors.length)];
+        socket.on('new-message', function (data) {     
+            $chat.append('<div class="card-header rounded  mb-1 w-100" style="color:#fff;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div>');
+            $chat.slimscroll({ scrollBy: '100px' });
+        });
+
+        $userForm.submit(function (e) {
+
+            e.preventDefault();
+            socket.emit('new-user', $username.val(), function (data) {
+                if (data) {
+                    $userFormArea.hide();
+                    $messageArea.css('display', 'flex');
+                }
+            });
+
+            $username.val('');
+        });
+
+        socket.on('get-users', function (data) {
+            console.log(data);
+            var html = '';
+            for (i = 0; i < data.length; i++) {
+                html += '<li class="list-group-item"><img src="./online.ico" class="mb-1"> ' + data[i].username + '</li>';
+            }
+            $users.html(html);
+        })
+    })
+</script>
+</body>
+
+</html>
