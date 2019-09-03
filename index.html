@@ -91,7 +91,8 @@
             alert('Please type a message!');
             return ; 
             }
-            socket.emit('send-message', $message.val());
+            const data = {to:"Admin",from:socket.username,msg:$message.val()};
+            socket.emit('send-message', data);
             $message.val('');
         });
 
@@ -109,17 +110,24 @@
                 if (data) {
                     $userFormArea.hide();
                     $messageArea.css('display', 'flex');
+                    
                 }
             });
-
+            socket.username = $username.val();
+            
             $username.val('');
         });
 
-        socket.on('get-users', function (data) {
-            console.log(data);
+        socket.on('get-users', function (users) {
+            console.log(users);
             var html = '';
-            for (i = 0; i < data.length; i++) {
-                html += '<li class="list-group-item"><img src="./online.ico" class="mb-1"> ' + data[i].username + '</li>';
+            for (i = 0; i < users.length; i++) {
+                if(users[i].username == socket.username)
+                {
+                    html += '<li class="list-group-item"><img src="./online.ico" class="mb-1"> ' + users[i].username + ' <small>(you)</small></li>';
+                    continue;
+                }
+                html += '<li class="list-group-item"><img src="./online.ico" class="mb-1"> ' + users[i].username + '</li>';
             }
             $users.html(html);
         })

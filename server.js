@@ -11,7 +11,8 @@ mongoose.connect(process.env.DB_CONNECT, { useNewUrlParser: true }, () =>
 //Get models
 const User = require("./models/User");
 
-
+//store users socket ids
+const people = {};
 
 //create the user
 async function createUser(username){
@@ -54,8 +55,9 @@ async function disconnectUser(username){
 
 //Open connections and push to the opened connections
 io.sockets.on('connection', socket => {
+    console.log(socket.id);
     connections.push(socket);
-    console.log('Connected: %s sockets connected', connections.length);
+   
 
     //Disconnect
     socket.on('disconnect', async function (data) {
@@ -66,21 +68,20 @@ io.sockets.on('connection', socket => {
 
     //Send message  
     socket.on('send-message', function (data) {
-        console.log(data);
-        io.sockets.emit('new-message', { msg: data, user: socket.username });
+        io.to(people[data.to]).to(people[data.from]).emit('new-message', { msg: data.msg, user: data.from });
     })
 
     //Neww user
-    socket.on('new-user', async function (data, callback) {
+    socket.on('new-user', async function (currentUser, callback){
         callback(true);
-        socket.username = data;
+        socket.username = currentUser;
+        people[socket.username] = socket.id;
         await createUser(socket.username);
-        updateUsernames();
+        updateUsernames(currentUser);
     })
-    async function updateUsernames() {
-        users = await fetchUsers();
-        console.log(users);
-        io.sockets.emit('get-users', users);
+    async function updateUsernames(currentUser){
+        users = await fetchUsers();      
+        io.sockets.emit('get-users', users, currentUser);
     }
 
 })
