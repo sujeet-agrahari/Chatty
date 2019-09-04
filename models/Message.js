@@ -2,16 +2,24 @@ const mongoose  = require('mongoose');
 
 const msgSchema = new mongoose.Schema({
   
-    msg_type:[Number],
-    to:{
-        type:ObjectId,
-        required:true
+    
+    sender:{
+        type: String,
+        required:true,
+        index:true,
+        ref:'User'
     },
-    from:{
-        type:ObjectId,
-        required:true
+    conversation_id:{ 
+        type:mongoose.Schema.Types.ObjectId,
+        required:true,
+        index:true,
+        ref:'Conversation'
     },
-    mesg:{
+    msg_type:{
+        type:Number,
+        default:1
+    },
+    msg:{
         type:String,
         required:true
     },
@@ -21,4 +29,4 @@ const msgSchema = new mongoose.Schema({
     }
 });
 
-module.exports  = mongoose.model('User', userSchema);
+module.exports  = mongoose.model('Message', msgSchema);
