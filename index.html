@@ -15,15 +15,18 @@
         #messageArea {
             display: none;
         }
+        .user:hover{
+            cursor: pointer;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container mt-5">
-        <div id="userFormArea" class="row">
-            <div class="col-4">
+    <div class="container-fluid mt-5">
+        <div id="userFormArea" class="row" style="height:80vh">
+            <div class="col-sm-4 my-auto mx-auto">
                 <form action="" id="userForm">
-                    <div class="form-group">
+                    <div class="form-group text-center">
                         <label for="">Username</label>
                         <input class="form-control" name="" id="username" cols="80" rows="1">
                         <br />
@@ -34,7 +37,14 @@
         </div>
 
         <div class="row" id="messageArea">
-            <div class="col-md-4">
+
+            <div class="col-md-1">
+                    <figure class="figure">
+                            <img src="user.png" class="figure-img img-fluid rounded" alt="avatar" style="width: 5rem; height:5rem;">
+                            <figcaption class="figure-caption text-center" id="yourself"></figcaption>
+                  </figure>
+            </div>
+            <div class="col-md-3">
                 <div class="card">
                     <div class="card-header">
                         Online Users
@@ -51,7 +61,7 @@
                 <form action="" id="messageForm" class="form-inline" style="position:fixed;bottom:20px">
                     <div class="form-group">
                         <textarea class="form-control d-inline-block mr-2" name="" id="message" cols="80" rows="1"></textarea>
-                        <button type="submit" class="btn btn-primary float-right px-4 d-inline-block"><i class="far fa-paper-plane"></i></button>
+                        <button type="submit" class="btn btn-primary float-right px-4 d-inline-block" disabled><i class="far fa-paper-plane"></i></button>
                     </div>
                 </form>
             </div>
@@ -84,6 +94,8 @@
         const $users = $('#users');
         const $username = $('#username');
         const $messageArea = $('#messageArea');
+        const $yourself = $('#yourself');
+        var clickedUser = '';
 
         $messageForm.submit(function (e) {
             e.preventDefault();
@@ -91,7 +103,8 @@
             alert('Please type a message!');
             return ; 
             }
-            socket.emit('send-message', $message.val());
+            const data = {to:clickedUser,from:socket.username,msg:$message.val()};
+            socket.emit('send-message', data);
             $message.val('');
         });
 
@@ -109,21 +122,64 @@
                 if (data) {
                     $userFormArea.hide();
                     $messageArea.css('display', 'flex');
+                    
                 }
             });
-
+            socket.username = $username.val();
+            $yourself.append('<strong>'+socket.username+'</strong>');
             $username.val('');
         });
 
-        socket.on('get-users', function (data) {
-            console.log(data);
+        socket.on('get-users', function (users) {
+            console.log(users);
             var html = '';
-            for (i = 0; i < data.length; i++) {
-                html += '<li class="list-group-item"><img src="./online.ico" class="mb-1"> ' + data[i].username + '</li>';
+            if(users.length < 2 ){
+                    html += '<p class="text-center"><i>No one is online...</i></p>';
+                    $users.html(html);
+                    return;
+            }
+            for (i = 0; i < users.length; i++) {
+                if(users[i].username == socket.username)
+                {    
+                    continue;
+                }
+                html += '<li class="list-group-item user"><img src="./online.ico" class="mb-1"> ' + users[i].username + ' </li>';
             }
             $users.html(html);
         })
+        //enable send button on focus
+        $('#message').focus(function(){    
+                $(':input[type="submit"]').prop('disabled', false);
+        });
+        $('#message').blur(function(){    
+                $(':input[type="submit"]').prop('disabled', true);
+        });
+        //Upate UI for a particular user on click
+        $("body").on('click','.user',function(e){
+             clickedUser = $(this).text().trim();
+             $('.user').css('background-color','white');
+             $(this).css('background-color','#e9ebee');
+           
+            socket.emit('get-chat-history',clickedUser,socket.username,function(data){
+                
+                var html = '';
+                if(data) {
+               
+                for (i = 0; i < data.length; i++) {
+                    html += '<div class="card-header rounded  mb-1 w-100" style="color:#fff;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div>';
+                    continue;
+                
+                    }
+                } else{
+                    html +="<p class='text-center'><strong><i> No chats found ..</i><strong></p>";
+                }
+                $chat.html(html);
+                $(':input[type="submit"]').prop('disabled', false);
+
+           
+        });
     })
+});
 </script>
 </body>
 
