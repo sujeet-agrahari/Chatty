@@ -11,6 +11,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.2.0/socket.io.js"></script>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css">
     <style>
         #messageArea {
             display: none;
@@ -18,6 +19,9 @@
         .user:hover{
             cursor: pointer;
         }
+        .msg{       
+            display: table;
+      }
     </style>
 </head>
 
@@ -56,7 +60,7 @@
                 </div>
             </div>
             <div class="col-md-6 offset-md-2">
-                <div class="pr-4" id="chat">
+                <div id="chat" class="card p-2" style="background:#e9ebee">
                 </div>
                 <form action="" id="messageForm" class="form-inline" style="position:fixed;bottom:20px">
                     <div class="form-group">
@@ -110,19 +114,24 @@
 
         let bg_colors = ['#FF5CA1', '#7646FF', '#FF7E29', '#13CF13', '#0084FF', '#FA3C4C'];
         var bg_color = bg_colors[Math.floor(Math.random()*bg_colors.length)];
-        socket.on('new-message', function (data) {     
-            $chat.append('<div class="card-header rounded  mb-1 w-100" style="color:#fff;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div>');
+        socket.on('new-message', function (data) { 
+            var ele =   '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
+
+            if(data.user == socket.username) {
+                ele =   '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
+            }         
+            $(ele).appendTo($chat).fadeIn('slow');
             $chat.slimscroll({ scrollBy: '100px' });
         });
 
         $userForm.submit(function (e) {
 
             e.preventDefault();
-            socket.emit('new-user', $username.val(), function (data) {
-                if (data) {
+            socket.emit('new-user', $username.val(), function (user) {
+                if (user) {
                     $userFormArea.hide();
                     $messageArea.css('display', 'flex');
-                    
+                    $('.user').css('background',user.color);    
                 }
             });
             socket.username = $username.val();
@@ -143,7 +152,12 @@
                 {    
                     continue;
                 }
-                html += '<li class="list-group-item user"><img src="./online.ico" class="mb-1"> ' + users[i].username + ' </li>';
+                if(users[i].online === true) {
+                    html += '<li class="list-group-item user"><img src="./online.ico" class="mb-1"> ' + users[i].username + ' </li>';
+                } else {
+                    html += '<li class="list-group-item user"><img src="./offline.ico" class="mb-1"> ' + users[i].username + ' </li>';
+                }
+                
             }
             $users.html(html);
         })
@@ -164,11 +178,14 @@
                 
                 var html = '';
                 if(data) {
-               
                 for (i = 0; i < data.length; i++) {
-                    html += '<div class="card-header rounded  mb-1 w-100" style="color:#fff;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div>';
-                    continue;
-                
+                    if(data[i].sender == socket.username)
+                    {
+                        html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
+                        continue;
+                    }
+                    html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
+                   
                     }
                 } else{
                     html +="<p class='text-center'><strong><i> No chats found ..</i><strong></p>";
