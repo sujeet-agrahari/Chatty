@@ -126,6 +126,12 @@ io.sockets.on('connection', socket => {
         
     });
 
+    //save changed users color
+    socket.on('color-change',async function (selected_color){
+        const update_user_color = await User.updateOne({username:socket.username}, {$set : {color:selected_color}});
+        
+    })
+
 })
 server.listen(3000, () => {
     console.log('Server Up and running...');

@@ -16,17 +16,47 @@
         #messageArea {
             display: none;
         }
-        .user:hover{
+
+        .user:hover {
             cursor: pointer;
         }
-        .msg{       
+
+        .msg {
             display: table;
-      }
+        }
+
+        .dropdown:hover .dropdown-menu {
+            display: block;
+            margin-top: 0;
+            cursor: pointer;
+        }
+
+        .color-bubble {
+            padding-left: 0;
+            padding-right: 0;
+            background: black;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+        }
+
+        .color-bubble:hover {
+            border: 2px solid white;
+        }
+
+        .dropdown-menu {
+            border: 0;
+
+        }
+
+        .dropdown-item:hover {
+            background: none;
+        }
     </style>
 </head>
 
 <body>
-    <div class="container-fluid mt-5">
+    <div class="container-fluid mt-3">
         <div id="userFormArea" class="row" style="height:80vh">
             <div class="col-sm-4 my-auto mx-auto">
                 <form action="" id="userForm">
@@ -43,10 +73,11 @@
         <div class="row" id="messageArea">
 
             <div class="col-md-1">
-                    <figure class="figure">
-                            <img src="user.png" class="figure-img img-fluid rounded" alt="avatar" style="width: 5rem; height:5rem;">
-                            <figcaption class="figure-caption text-center" id="yourself"></figcaption>
-                  </figure>
+                <figure class="figure">
+                    <img src="user.png" class="figure-img img-fluid rounded" alt="avatar"
+                        style="width: 5rem; height:5rem;">
+                    <figcaption class="figure-caption text-center" id="yourself"></figcaption>
+                </figure>
             </div>
             <div class="col-md-3">
                 <div class="card">
@@ -60,12 +91,60 @@
                 </div>
             </div>
             <div class="col-md-6 offset-md-2">
-                <div id="chat" class="card p-2" style="background:#e9ebee">
+                <div class="dropdown mx-auto" style="width: 10px;">
+                    <div style="background-color:black;border-radius: 50%; width: 30px;height: 30px;" class="mx-auto"
+                        id="color_selector">
+                    </div>
+                    <div class="dropdown-menu" style="width:20px;background-color: #e9ebee">
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color: #ff5ca1">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color: #ff7e29">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color: #13cf13">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color: #fa3c4c">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background: #d696bb">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color: #7646ff">
+
+                            </div>
+                        </a>
+                        <a class="dropdown-item px-0">
+                            <div class="color-bubble" style="background-color:#02e6cc">
+
+                            </div>
+                        </a>
+                    </div>
                 </div>
-                <form action="" id="messageForm" class="form-inline" style="position:fixed;bottom:20px">
-                    <div class="form-group">
-                        <textarea class="form-control d-inline-block mr-2" name="" id="message" cols="80" rows="1"></textarea>
-                        <button type="submit" class="btn btn-primary float-right px-4 d-inline-block" disabled><i class="far fa-paper-plane"></i></button>
+                <div id="chat" class="card p-2" style="background:#e9ebee">
+
+                </div>
+                <form action="" id="messageForm" class=" position-sticky mt-4" style="bottom:20px">
+                    <div class="form-row">
+                        <div class="col-md-11">
+                            <input class="form-control" name="" id="message">
+                        </div>
+                        <div class="col-md-1">
+                            <button type="submit" class="btn btn-primary px-4" disabled><i
+                                    class="far fa-paper-plane"></i></button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -74,15 +153,15 @@
 </body>
 <script>
     $(function () {
-        
+
         //initialize slim scroll
         $('#chat').slimScroll({
-		height: '620px'
+            height: '620px'
         });
 
         //
         //submit form on enter key press
-        $('#message').keypress(function(e) {
+        $('#message').keypress(function (e) {
             if (e.which == 13) {
                 $('form#messageForm').submit();
                 return false;
@@ -99,27 +178,28 @@
         const $username = $('#username');
         const $messageArea = $('#messageArea');
         const $yourself = $('#yourself');
+        const $color_selector = $('#color_selector')
         var clickedUser = '';
+        var userColor = '';
 
         $messageForm.submit(function (e) {
             e.preventDefault();
-            if($message.val().trim() == ''){
-            alert('Please type a message!');
-            return ; 
+            if ($message.val().trim() == '') {
+                alert('Please type a message!');
+                return;
             }
-            const data = {to:clickedUser,from:socket.username,msg:$message.val()};
+            const data = { to: clickedUser, from: socket.username, msg: $message.val() };
             socket.emit('send-message', data);
             $message.val('');
         });
 
-        let bg_colors = ['#FF5CA1', '#7646FF', '#FF7E29', '#13CF13', '#0084FF', '#FA3C4C'];
-        var bg_color = bg_colors[Math.floor(Math.random()*bg_colors.length)];
-        socket.on('new-message', function (data) { 
-            var ele =   '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
 
-            if(data.user == socket.username) {
-                ele =   '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
-            }         
+        socket.on('new-message', function (data) {
+            var ele = '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:' + userColor + '"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
+
+            if (data.user == socket.username) {
+                ele = '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:' + userColor + '"><strong>' + data.user + '</strong> : ' + data.msg + '</div></div>';
+            }
             $(ele).appendTo($chat).fadeIn('slow');
             $chat.slimscroll({ scrollBy: '100px' });
         });
@@ -131,72 +211,78 @@
                 if (user) {
                     $userFormArea.hide();
                     $messageArea.css('display', 'flex');
-                    $('.user').css('background',user.color);    
+                    userColor = user.color;
+                    $color_selector.css('background', userColor);
                 }
             });
             socket.username = $username.val();
-            $yourself.append('<strong>'+socket.username+'</strong>');
+            $yourself.append('<strong>' + socket.username + '</strong>');
             $username.val('');
         });
 
         socket.on('get-users', function (users) {
             console.log(users);
             var html = '';
-            if(users.length < 2 ){
-                    html += '<p class="text-center"><i>No one is online...</i></p>';
-                    $users.html(html);
-                    return;
+            if (users.length < 2) {
+                html += '<p class="text-center"><i>No one is online...</i></p>';
+                $users.html(html);
+                return;
             }
             for (i = 0; i < users.length; i++) {
-                if(users[i].username == socket.username)
-                {    
+                if (users[i].username == socket.username) {
                     continue;
                 }
-                if(users[i].online === true) {
+                if (users[i].online === true) {
                     html += '<li class="list-group-item user"><img src="./online.ico" class="mb-1"> ' + users[i].username + ' </li>';
                 } else {
                     html += '<li class="list-group-item user"><img src="./offline.ico" class="mb-1"> ' + users[i].username + ' </li>';
                 }
-                
+
             }
             $users.html(html);
         })
         //enable send button on focus
-        $('#message').focus(function(){    
-                $(':input[type="submit"]').prop('disabled', false);
+        $('#message').focus(function () {
+            $(':input[type="submit"]').prop('disabled', false);
         });
-        $('#message').blur(function(){    
-                $(':input[type="submit"]').prop('disabled', true);
+        $('#message').blur(function () {
+            $(':input[type="submit"]').prop('disabled', true);
         });
         //Upate UI for a particular user on click
-        $("body").on('click','.user',function(e){
-             clickedUser = $(this).text().trim();
-             $('.user').css('background-color','white');
-             $(this).css('background-color','#e9ebee');
-           
-            socket.emit('get-chat-history',clickedUser,socket.username,function(data){
-                
+        $("body").on('click', '.user', function (e) {
+            clickedUser = $(this).text().trim();
+            $('.user').css('background-color', 'white');
+            $(this).css('background-color', '#e9ebee');
+
+            socket.emit('get-chat-history', clickedUser, socket.username, function (data) {
+
                 var html = '';
-                if(data) {
-                for (i = 0; i < data.length; i++) {
-                    if(data[i].sender == socket.username)
-                    {
-                        html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
-                        continue;
+                if (data) {
+                    for (i = 0; i < data.length; i++) {
+                        if (data[i].sender == socket.username) {
+                            html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-right msg" style="color:#fff;border-radius:30px;background-color:' + userColor + '"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
+                            continue;
+                        }
+                        html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:' + userColor + '"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
+
                     }
-                    html += '<div class="clearfix"><div class="mb-1 py-3 px-4 d-inline-block float-left msg" style="color:#fff;border-radius:30px;background-color:'+ bg_color+'"><strong>' + data[i].sender + '</strong> : ' + data[i].msg + '</div></div>';
-                   
-                    }
-                } else{
-                    html +="<p class='text-center'><strong><i> No chats found ..</i><strong></p>";
+                } else {
+                    html += "<p class='text-center'><strong><i> No chats found ..</i><strong></p>";
                 }
                 $chat.html(html);
                 $(':input[type="submit"]').prop('disabled', false);
 
-           
+
+            });
+        })
+        $('.color-bubble').click(function (e) {
+            let selected_color = $(this).css("background-color")
+            $('.msg').css('background-color', selected_color);
+            $('#color_selector').css('background-color', selected_color);
+            socket.emit('color-change', selected_color);
+            userColor = selected_color;
         });
-    })
-});
+    });
 </script>
 </body>
 
