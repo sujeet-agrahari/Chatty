@@ -11,6 +11,11 @@ const userSchema = new mongoose.Schema({
         type:Boolean,
         required:true,
         default:true
+    },
+    
+    color:{
+        type:String,
+        default:'#7646FF'
     }
 });
 

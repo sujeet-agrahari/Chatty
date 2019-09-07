@@ -22,7 +22,7 @@ async function createUser(username){
     const userExists = await User.findOne({ username: username });
     if (userExists) {
         const makeUserOnline = await User.updateOne({username:username}, {$set : {online:true}});
-        return;
+        return userExists;
     }
     
     //create new user
@@ -30,12 +30,12 @@ async function createUser(username){
         username: username,
         online:true
     });
-        const createdUser = await user.save();
-    return;
+         
+    return await user.save();;
 }
 //Fetch Users
 async function fetchUsers(){
-    return  await User.find({online:true});
+    return  await User.find();
     
 }
 
@@ -105,10 +105,11 @@ io.sockets.on('connection', socket => {
 
     //Neww user
     socket.on('new-user', async function (currentUser, callback){
-        callback(true);
+        
         socket.username = currentUser;
+        const user = await createUser(socket.username);
+        callback(user);
         people[socket.username] = socket.id;
-        await createUser(socket.username);
         updateUsernames(currentUser);
     })
     async function updateUsernames(currentUser){
@@ -124,6 +125,12 @@ io.sockets.on('connection', socket => {
         console.log(chats,clickedUser,currentUser);
         
     });
+
+    //save changed users color
+    socket.on('color-change',async function (selected_color){
+        const update_user_color = await User.updateOne({username:socket.username}, {$set : {color:selected_color}});
+        
+    })
 
 })
 server.listen(3000, () => {
